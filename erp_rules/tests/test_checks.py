@@ -6,6 +6,7 @@ import frappe
 from erp_rules.checks.base import BLOCK, WARN
 from erp_rules.checks.client_paid_check import ClientPaidCheck
 from erp_rules.checks.discount_reason_check import DiscountReasonCheck
+from erp_rules.checks.due_date_check import DueDateCheck
 from erp_rules.checks.duplicate_payment_check import DuplicatePaymentCheck
 from erp_rules.checks.hours_as_quantity_check import HoursAsQuantityCheck
 from erp_rules.checks.no_cash_account_check import NoCashAccountCheck
@@ -174,3 +175,22 @@ class TestClientPaidCheck(unittest.TestCase):
         doc = self._payout()
         doc.payment_type = "Receive"
         self.assertFalse(self.check.applies_to(doc))
+
+
+class TestDueDateCheck(unittest.TestCase):
+    def setUp(self):
+        self.check = DueDateCheck()
+
+    def test_warns_when_due_too_soon(self):
+        problems = self.check.problems(make_doc(posting_date="2026-11-01", due_date="2026-11-15"))
+        self.assertEqual([p.severity for p in problems], [WARN])
+        self.assertIn("14 days", problems[0].message)
+
+    def test_same_day_is_singular(self):
+        self.assertIn("0 days", self.check.problems(make_doc(posting_date="2026-11-01", due_date="2026-11-01"))[0].message)
+
+    def test_quiet_at_standard_terms(self):
+        self.assertEqual(self.check.problems(make_doc(posting_date="2026-11-01", due_date="2026-11-30")), [])
+
+    def test_ignores_credit_notes(self):
+        self.assertFalse(self.check.applies_to(make_doc(posting_date="2026-11-01", due_date="2026-11-01", is_return=1)))
