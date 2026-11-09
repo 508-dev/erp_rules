@@ -26,6 +26,7 @@ Each rule is an independent class that inspects a document and returns a list of
 | `HoursAsQuantityCheck` | Sales Invoice, Purchase Invoice | Warn | An hourly item entered as one lump sum (qty 1, rate over $300) on a project that was invoiced by the hour in the last 90 days |
 | `NoCashAccountCheck` | Payment Entry, Journal Entry | Block | Any use of a Cash-type account; 508 holds no cash |
 | `DuplicatePaymentCheck` | Payment Entry (on submit) | Block | Another submitted payment with the same party, direction and amount within 7 days, unless **Not a duplicate** is ticked |
+| `DueDateCheck` | Sales Invoice | Warn | Due less than 29 days after the invoice date (Purchase Invoices are moved out automatically by `DueDateRule`) |
 | `ClientPaidCheck` | Payment Entry (on submit) | Warn | Paying an engineer's bill while the project's client invoice for that period is unpaid |
 
 The checks rely on two custom fields, created on install and on every `migrate`: `Sales Invoice.discount_reason` and `Payment Entry.confirm_not_duplicate`.
@@ -46,6 +47,7 @@ erp_rules/
 ├── checks/
 │   ├── base.py          # BaseCheck abstract class, Problem, WARN / BLOCK
 │   ├── discount_reason_check.py
+│   ├── due_date_check.py
 │   ├── hours_as_quantity_check.py
 │   ├── no_cash_account_check.py
 │   ├── duplicate_payment_check.py
